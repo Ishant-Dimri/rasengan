@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rasengan Simulator 🌀</title>
 
-  <!-- MediaPipe Hands CDN — pinned versions for reliability -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
@@ -20,7 +19,6 @@
       --blue-core:   #a8edff;
       --blue-mid:    #00c8ff;
       --blue-deep:   #0050c8;
-      --white-core:  #ffffff;
       --bg:          #04080f;
       --ui-glow:     rgba(0, 200, 255, 0.6);
     }
@@ -37,7 +35,6 @@
       color: #cce9ff;
     }
 
-    /* ── Animated starfield background ── */
     body::before {
       content: '';
       position: fixed;
@@ -48,7 +45,6 @@
       pointer-events: none;
     }
 
-    /* ── Header ── */
     header {
       text-align: center;
       margin-bottom: 18px;
@@ -62,29 +58,46 @@
       background: linear-gradient(135deg, #ffffff 30%, var(--blue-mid) 70%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-shadow: none;
       filter: drop-shadow(0 0 18px rgba(0,200,255,0.7));
     }
-    header p {
-      font-size: 0.82rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: rgba(160,220,255,0.55);
-      margin-top: 4px;
+
+    /* Start Button Overlay */
+    #start-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 8, 15, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: opacity 0.5s;
+    }
+    #start-btn {
+      padding: 15px 40px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 4px;
+      color: #fff;
+      background: transparent;
+      border: 2px solid var(--blue-mid);
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+      transition: 0.3s;
+    }
+    #start-btn:hover {
+      background: rgba(0, 200, 255, 0.2);
+      box-shadow: 0 0 30px rgba(0, 200, 255, 0.6);
     }
 
-    /* ── Main video container ── */
     #container {
       position: relative;
       width: min(640px, 98vw);
       aspect-ratio: 4 / 3;
       border-radius: 14px;
       overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(0,200,255,0.18),
-        0 0 50px rgba(0,130,255,0.25),
-        0 0 100px rgba(0,80,200,0.15);
+      box-shadow: 0 0 50px rgba(0,130,255,0.25);
     }
 
     video, #output_canvas {
@@ -92,11 +105,10 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      transform: scaleX(-1); /* mirror for natural feel */
+      transform: scaleX(-1);
     }
     video { object-fit: cover; }
 
-    /* ── Loading overlay ── */
     #loading-overlay {
       position: absolute;
       inset: 0;
@@ -107,11 +119,8 @@
       justify-content: center;
       z-index: 30;
       gap: 20px;
-      border-radius: 14px;
       transition: opacity 0.5s;
     }
-    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
-
     .spinner-ring {
       width: 60px; height: 60px;
       border-radius: 50%;
@@ -119,18 +128,9 @@
       border-top-color: var(--blue-mid);
       border-right-color: rgba(0,200,255,0.35);
       animation: spin 0.9s linear infinite;
-      box-shadow: 0 0 20px var(--ui-glow);
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #loading-overlay span {
-      font-family: 'Bebas Neue', sans-serif;
-      letter-spacing: 4px;
-      font-size: 1.1rem;
-      color: rgba(160,220,255,0.7);
-    }
-
-    /* ── RASENGAN label (in-canvas overlay, mirrored back) ── */
     #rasengan-label {
       position: absolute;
       top: 16px;
@@ -140,18 +140,12 @@
       font-size: clamp(1.4rem, 4vw, 2.2rem);
       letter-spacing: 10px;
       color: #fff;
-      text-shadow:
-        0 0 10px #fff,
-        0 0 30px var(--blue-mid),
-        0 0 60px #0070ff;
+      text-shadow: 0 0 30px var(--blue-mid);
       opacity: 0;
       transition: opacity 0.25s ease;
       z-index: 10;
-      pointer-events: none;
-      white-space: nowrap;
     }
 
-    /* ── Status bar ── */
     #status-bar {
       margin-top: 16px;
       display: flex;
@@ -159,59 +153,25 @@
       gap: 10px;
       font-size: 0.83rem;
       letter-spacing: 2px;
-      text-transform: uppercase;
       color: rgba(140, 200, 240, 0.6);
-      position: relative;
-      z-index: 5;
     }
     #dot {
       width: 8px; height: 8px;
       border-radius: 50%;
       background: rgba(0,200,255,0.3);
-      transition: background 0.3s, box-shadow 0.3s;
     }
     #dot.active {
       background: var(--blue-mid);
       box-shadow: 0 0 12px var(--ui-glow), 0 0 4px #fff;
     }
-    #status-text { transition: color 0.3s; }
     #status-text.active { color: var(--blue-mid); }
-
-    /* ── Corner decorations ── */
-    .corner {
-      position: absolute;
-      width: 22px; height: 22px;
-      border-color: rgba(0,200,255,0.4);
-      border-style: solid;
-      pointer-events: none;
-      z-index: 20;
-    }
-    .corner.tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
-    .corner.tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
-    .corner.bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
-    .corner.br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 3px 0; }
-
-    /* ── Instruction pill ── */
-    #hint {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%) scaleX(-1);
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(0,180,255,0.2);
-      border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 0.72rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(140,210,255,0.65);
-      pointer-events: none;
-      z-index: 15;
-      white-space: nowrap;
-    }
   </style>
 </head>
 <body>
+
+  <div id="start-screen">
+    <button id="start-btn">INITIALIZE CHAKRA</button>
+  </div>
 
   <header>
     <h1>🌀 Rasengan Simulator</h1>
@@ -219,24 +179,11 @@
   </header>
 
   <div id="container">
-    <!-- Loading -->
     <div id="loading-overlay">
       <div class="spinner-ring"></div>
-      <span>Initializing AI Model...</span>
+      <span style="font-family: 'Bebas Neue'; letter-spacing: 4px;">Loading Camera...</span>
     </div>
-
-    <!-- Decorative corners -->
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
-
-    <!-- RASENGAN text label -->
     <div id="rasengan-label">RASENGAN !</div>
-
-    <!-- Hint -->
-    <div id="hint">Spread your hand open wide ✋</div>
-
     <video id="webcam" autoplay playsinline muted></video>
     <canvas id="output_canvas"></canvas>
   </div>
@@ -248,240 +195,110 @@
 
   <script>
   (() => {
-    /* ===== DOM refs ===== */
-    const video      = document.getElementById('webcam');
-    const canvas     = document.getElementById('output_canvas');
-    const ctx        = canvas.getContext('2d');
-    const overlay    = document.getElementById('loading-overlay');
-    const label      = document.getElementById('rasengan-label');
-    const dot        = document.getElementById('dot');
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('output_canvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('loading-overlay');
+    const label = document.getElementById('rasengan-label');
+    const dot = document.getElementById('dot');
     const statusText = document.getElementById('status-text');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
 
-    /* ===== Animation state ===== */
-    let rotAngle      = 0;
-    let rasenganAlpha = 0;   // current rendered opacity (0–1)
-    let targetAlpha   = 0;   // desired opacity
+    let rotAngle = 0;
+    let rasenganAlpha = 0;
+    let targetAlpha = 0;
     let lastX = 0, lastY = 0, lastR = 60;
     let prevSpan = 0;
 
-    /* ===== Particle system ===== */
+    // Audio Variables
+    let audioCtx, osc, gain;
+
+    // Motion Trail
+    const trail = [];
+
+    // Particles
     const PARTICLE_COUNT = 150;
-    const particles = [];
+    const particles = Array.from({length: PARTICLE_COUNT}, () => ({
+      angle: Math.random() * Math.PI * 2,
+      rRatio: 0.12 + Math.random() * 1.0,
+      vRatio: 0.2 + Math.random() * 0.55,
+      speed: (0.025 + Math.random() * 0.065) * (Math.random() > 0.45 ? 1 : -1.3),
+      size: 1.2 + Math.random() * 2.6,
+      baseAlpha: 0.45 + Math.random() * 0.55,
+      isWhite: Math.random() > 0.4,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleS: 0.04 + Math.random() * 0.06
+    }));
 
-    class Particle {
-      constructor() {
-        this.angle    = Math.random() * Math.PI * 2;
-        this.rRatio   = 0.12 + Math.random() * 1.0;   // orbit size as fraction of rasengan radius
-        this.vRatio   = 0.2  + Math.random() * 0.55;  // vertical squeeze (3-D illusion)
-        this.speed    = (0.025 + Math.random() * 0.065) * (Math.random() > 0.45 ? 1 : -1.3);
-        this.size     = 1.2  + Math.random() * 2.6;
-        this.baseAlpha= 0.45 + Math.random() * 0.55;
-        this.isWhite  = Math.random() > 0.4;
-        this.twinkle  = Math.random() * Math.PI * 2;
-        this.twinkleS = 0.04 + Math.random() * 0.06;
-      }
-      update() {
-        this.angle   += this.speed;
-        this.twinkle += this.twinkleS;
-      }
-      draw(cx, cy, baseRadius, globalAlpha) {
-        const r     = baseRadius * this.rRatio;
-        const px    = cx + Math.cos(this.angle) * r;
-        const py    = cy + Math.sin(this.angle) * r * this.vRatio;
-        const alpha = this.baseAlpha * globalAlpha * (0.6 + 0.4 * Math.sin(this.twinkle));
-        ctx.beginPath();
-        ctx.arc(px, py, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.isWhite
-          ? `rgba(240,252,255,${alpha})`
-          : `rgba(60,200,255,${alpha})`;
-        ctx.fill();
-      }
-    }
-
-    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
-
-    /* ===== Utility ===== */
-    function dist3D(a, b) {
-      return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2);
-    }
+    function dist3D(a, b) { return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2); }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
-    /* ===== Core render ===== */
     function drawRasengan(cx, cy, radius, alpha) {
       if (alpha < 0.005) return;
-
       ctx.save();
-
-      // ── Far outer atmospheric halo ──
-      const halo = ctx.createRadialGradient(cx, cy, radius * 0.6, cx, cy, radius * 3.0);
-      halo.addColorStop(0,   `rgba(0,140,255,${0.14 * alpha})`);
-      halo.addColorStop(0.5, `rgba(0,80,200,${0.07 * alpha})`);
-      halo.addColorStop(1,   'rgba(0,20,100,0)');
       ctx.globalCompositeOperation = 'screen';
-      ctx.fillStyle = halo;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 3.0, 0, Math.PI * 2);
-      ctx.fill();
 
-      // ── Mid energy sphere ──
-      const midSphere = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.1);
-      midSphere.addColorStop(0,    `rgba(230,248,255,${0.85 * alpha})`);
-      midSphere.addColorStop(0.25, `rgba(120,230,255,${0.75 * alpha})`);
-      midSphere.addColorStop(0.55, `rgba(30,160,255,${0.55 * alpha})`);
-      midSphere.addColorStop(0.8,  `rgba(0,80,200,${0.25 * alpha})`);
-      midSphere.addColorStop(1,    'rgba(0,50,150,0)');
-      ctx.fillStyle = midSphere;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 1.1, 0, Math.PI * 2);
-      ctx.fill();
-
-      // ── Bright white inner core ──
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.5);
-      core.addColorStop(0,   `rgba(255,255,255,${alpha})`);
-      core.addColorStop(0.5, `rgba(210,248,255,${0.9 * alpha})`);
-      core.addColorStop(1,   `rgba(100,220,255,0)`);
+      // Core sphere
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.2);
+      core.addColorStop(0, `rgba(255,255,255,${alpha})`);
+      core.addColorStop(0.4, `rgba(100,220,255,${0.8 * alpha})`);
+      core.addColorStop(1, 'rgba(0,50,150,0)');
       ctx.fillStyle = core;
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, radius * 1.2, 0, Math.PI * 2); ctx.fill();
 
-      // ── Spiraling orbital rings ──
+      // Rings
       const ringDefs = [
-        { tiltBase: 0,              majorR: 0.95, minorFactor: 0.15, lineW: 2.8, dir:  1   },
-        { tiltBase: Math.PI/3,      majorR: 0.88, minorFactor: 0.22, lineW: 2.4, dir: -1.2 },
-        { tiltBase: Math.PI*2/3,    majorR: 0.80, minorFactor: 0.30, lineW: 2.0, dir:  1.4 },
-        { tiltBase: Math.PI,        majorR: 0.72, minorFactor: 0.35, lineW: 1.6, dir: -0.9 },
-        { tiltBase: Math.PI*4/3,    majorR: 0.62, minorFactor: 0.40, lineW: 1.3, dir:  1.1 },
+        { tilt: 0, a: 0.95, b: 0.15, dir: 1 },
+        { tilt: Math.PI/3, a: 0.88, b: 0.22, dir: -1.2 },
+        { tilt: Math.PI*2/3, a: 0.80, b: 0.30, dir: 1.4 }
       ];
 
-      ctx.save();
       ctx.translate(cx, cy);
+      ctx.strokeStyle = `rgba(160,235,255,${0.75 * alpha})`;
+      ctx.lineWidth = 2;
       for (const ring of ringDefs) {
-        const tilt = ring.tiltBase + rotAngle * ring.dir;
         ctx.save();
-        ctx.rotate(tilt);
-
-        const a = radius * ring.majorR;
-        const b = radius * ring.minorFactor;
-
-        ctx.beginPath();
-        ctx.ellipse(0, 0, a, b, 0, 0, Math.PI * 2);
-
-        const rg = ctx.createLinearGradient(-a, 0, a, 0);
-        rg.addColorStop(0,    `rgba(255,255,255,0)`);
-        rg.addColorStop(0.25, `rgba(160,235,255,${0.75 * alpha})`);
-        rg.addColorStop(0.5,  `rgba(255,255,255,${0.95 * alpha})`);
-        rg.addColorStop(0.75, `rgba(0,200,255,${0.75 * alpha})`);
-        rg.addColorStop(1,    `rgba(255,255,255,0)`);
-
-        ctx.strokeStyle = rg;
-        ctx.lineWidth   = ring.lineW;
-        ctx.shadowColor = 'rgba(0,210,255,0.8)';
-        ctx.shadowBlur  = 10;
-        ctx.stroke();
+        ctx.rotate(ring.tilt + rotAngle * ring.dir);
+        ctx.beginPath(); ctx.ellipse(0, 0, radius * ring.a, radius * ring.b, 0, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
       }
-      ctx.restore();
+      ctx.translate(-cx, -cy);
 
-      // ── Particles ──
-      ctx.globalCompositeOperation = 'screen';
-      ctx.shadowBlur = 0;
+      // Particles
       for (const p of particles) {
-        p.update();
-        p.draw(cx, cy, radius, alpha);
+        p.angle += p.speed;
+        p.twinkle += p.twinkleS;
+        const px = cx + Math.cos(p.angle) * (radius * p.rRatio);
+        const py = cy + Math.sin(p.angle) * (radius * p.rRatio) * p.vRatio;
+        ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.isWhite ? `rgba(240,252,255,${p.baseAlpha * alpha})` : `rgba(60,200,255,${p.baseAlpha * alpha})`;
+        ctx.fill();
       }
-
-      // ── Edge lightning crackles ──
-      ctx.globalCompositeOperation = 'screen';
-      ctx.strokeStyle = `rgba(200,240,255,${0.55 * alpha})`;
-      ctx.lineWidth   = 1.2;
-      ctx.shadowColor = 'rgba(0,220,255,0.9)';
-      ctx.shadowBlur  = 8;
-      const NUM_BOLTS = 10;
-      for (let i = 0; i < NUM_BOLTS; i++) {
-        const angle  = rotAngle * 1.8 + (i / NUM_BOLTS) * Math.PI * 2;
-        const r1     = radius * 0.85;
-        const r2     = radius * (1.15 + (Math.sin(rotAngle * 3 + i) * 0.5 + 0.5) * 0.3);
-        const jitter = 0.25;
-        const midA   = angle + (Math.random() - 0.5) * jitter;
-        const midR   = (r1 + r2) * 0.5;
-
-        ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
-        ctx.quadraticCurveTo(
-          cx + Math.cos(midA) * midR,
-          cy + Math.sin(midA) * midR * 0.75,
-          cx + Math.cos(angle + 0.12) * r2,
-          cy + Math.sin(angle + 0.12) * r2 * 0.85
-        );
-        ctx.stroke();
-      }
-
-      // ── Bright edge ring ──
-      ctx.globalCompositeOperation = 'screen';
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius * 0.95, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(200, 245, 255, ${0.4 * alpha})`;
-      ctx.lineWidth = 2;
-      ctx.shadowColor = '#00d4ff';
-      ctx.shadowBlur  = 18;
-      ctx.stroke();
 
       ctx.restore();
-      rotAngle += 0.038;
+      rotAngle += 0.04;
     }
 
-    /* ===== MediaPipe results handler ===== */
     function onResults(results) {
-      // Sync canvas size with video
-      const W = video.videoWidth  || 640;
+      const W = video.videoWidth || 640;
       const H = video.videoHeight || 480;
-      if (canvas.width !== W)  canvas.width  = W;
+      if (canvas.width !== W) canvas.width = W;
       if (canvas.height !== H) canvas.height = H;
-
       ctx.clearRect(0, 0, W, H);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const lm = results.multiHandLandmarks[0];
+        const spanFull = Math.max(dist3D(lm[4], lm[20]), dist3D(lm[4], lm[8]));
+        prevSpan = lerp(prevSpan, spanFull, 0.35);
 
-        // Faint hand skeleton overlay
-        drawConnectors(ctx, lm, HAND_CONNECTIONS,
-          { color: 'rgba(0,200,255,0.18)', lineWidth: 1 });
-        drawLandmarks(ctx, lm,
-          { color: 'rgba(0,220,255,0.35)', lineWidth: 0.5, radius: 2 });
+        if (prevSpan > 0.22) {
+          targetAlpha = Math.min(1, (prevSpan - 0.22) / 0.18);
+          lastX = lerp(lastX, ((lm[9].x + lm[0].x) / 2) * W, 0.35);
+          lastY = lerp(lastY, ((lm[9].y + lm[0].y) / 2) * H, 0.35);
+          lastR = lerp(lastR, prevSpan * W * 0.52, 0.3);
 
-        /* ---- Gesture detection ---- */
-        const wrist     = lm[0];   // wrist
-        const thumbTip  = lm[4];   // thumb tip
-        const pinkyTip  = lm[20];  // pinky tip
-        const palmMid   = lm[9];   // middle finger MCP (palm centre proxy)
-        const indexTip  = lm[8];   // index tip (extra span)
-
-        // Thumb-to-pinky span is the primary gesture signal
-        const span     = dist3D(thumbTip, pinkyTip);
-        const spanFull = Math.max(span, dist3D(thumbTip, indexTip));
-
-        // Smooth span to reduce jitter
-        const smoothedSpan = lerp(prevSpan, spanFull, 0.35);
-        prevSpan = smoothedSpan;
-
-        const THRESHOLD  = 0.22;
-        const FULL_SPAN  = 0.40;  // span at which rasengan is fully bright
-
-        if (smoothedSpan > THRESHOLD) {
-          const rampT    = Math.min(1, (smoothedSpan - THRESHOLD) / (FULL_SPAN - THRESHOLD));
-          targetAlpha    = rampT;
-
-          // Palm centre in canvas pixels
-          const cx = ((palmMid.x + wrist.x) / 2) * W;
-          const cy = ((palmMid.y + wrist.y) / 2) * H;
-          const r  = smoothedSpan * W * 0.52;
-
-          lastX = lerp(lastX, cx, 0.35);
-          lastY = lerp(lastY, cy, 0.35);
-          lastR = lerp(lastR, r,  0.3);
-
-          label.style.opacity = String(rampT.toFixed(2));
+          label.style.opacity = targetAlpha.toFixed(2);
           dot.classList.add('active');
           statusText.classList.add('active');
           statusText.textContent = 'RASENGAN ACTIVE ⚡';
@@ -500,69 +317,60 @@
         statusText.textContent = 'Waiting for hand...';
       }
 
-      // Smooth fade in/out
       rasenganAlpha += (targetAlpha - rasenganAlpha) * 0.14;
 
+      // Ensure Audio Updates dynamically with the alpha
+      if (audioCtx && gain && osc) {
+        gain.gain.setTargetAtTime(rasenganAlpha * 0.3, audioCtx.currentTime, 0.1);
+        osc.frequency.setTargetAtTime(180 + rasenganAlpha * 200, audioCtx.currentTime, 0.1);
+      }
+
       if (rasenganAlpha > 0.005) {
+        // Draw Motion Trail Behind
+        trail.push({ x: lastX, y: lastY, r: lastR, age: 0 });
+        if (trail.length > 8) trail.shift();
+        trail.forEach((t) => {
+          t.age++;
+          const trailAlpha = rasenganAlpha * (1 - t.age / 8) * 0.3;
+          drawRasengan(t.x, t.y, t.r * 0.8, trailAlpha);
+        });
+
+        // Draw Main Rasengan
         drawRasengan(lastX, lastY, lastR, rasenganAlpha);
+      } else {
+        trail.length = 0; // Clear trail when off
       }
     }
 
-    /* ===== MediaPipe Hands init ===== */
-    const hands = new Hands({
-      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}`
-    });
+    // Main Init
+    startBtn.addEventListener('click', () => {
+      startScreen.style.opacity = '0';
+      setTimeout(() => startScreen.style.display = 'none', 500);
 
-    hands.setOptions({
-      maxNumHands:           1,
-      modelComplexity:       1,
-      minDetectionConfidence: 0.72,
-      minTrackingConfidence:  0.62,
-    });
+      // 1. Init Audio safely behind interaction
+      audioCtx = new AudioContext();
+      osc = audioCtx.createOscillator();
+      gain = audioCtx.createGain();
+      osc.connect(gain); 
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine'; 
+      osc.frequency.value = 180;
+      gain.gain.value = 0; 
+      osc.start();
 
-    hands.onResults(onResults);
+      // 2. Init Camera & AI
+      const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
+      hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.6 });
+      hands.onResults(onResults);
 
-    /* ===== Camera init ===== */
-    const camera = new Camera(video, {
-      onFrame: async () => { await hands.send({ image: video }); },
-      width:  640,
-      height: 480,
+      const camera = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 640, height: 480 });
+      camera.start()
+        .then(() => {
+          overlay.classList.add('hidden');
+          setTimeout(() => overlay.style.display = 'none', 600);
+        })
+        .catch(err => alert('Camera error: ' + err.message));
     });
-    //Audio Function
-    const audioCtx = new AudioContext();
-const osc = audioCtx.createOscillator();
-const gain = audioCtx.createGain();
-osc.connect(gain); gain.connect(audioCtx.destination);
-osc.type = 'sine'; osc.frequency.value = 180;
-gain.gain.value = 0; osc.start();
-// Then inside onResults, set based on rasenganAlpha:
-gain.gain.setTargetAtTime(rasenganAlpha * 0.3, audioCtx.currentTime, 0.1);
-osc.frequency.setTargetAtTime(180 + rasenganAlpha * 200, audioCtx.currentTime, 0.1);
-    
-//motion trail
-    const trail = [];
-// in onResults, before drawing:
-trail.push({ x: lastX, y: lastY, r: lastR, age: 0 });
-if (trail.length > 12) trail.shift();
-trail.forEach((t, i) => {
-  t.age++;
-  const trailAlpha = rasenganAlpha * (1 - t.age / 12) * 0.4;
-  drawRasengan(t.x, t.y, t.r * 0.7, trailAlpha);
-});
-    //offscreencanvas 
-    const offscreen = new OffscreenCanvas(640, 480);
-const worker = new Worker('particles.worker.js');
-worker.postMessage({ canvas: offscreen }, [offscreen]);
-    camera.start()
-      .then(() => {
-        overlay.classList.add('hidden');
-        setTimeout(() => overlay.style.display = 'none', 600);
-      })
-      .catch(err => {
-        const msg = overlay.querySelector('span');
-        msg.textContent = '❌ Camera error: ' + err.message;
-        console.error(err);
-      });
 
   })();
   </script>
