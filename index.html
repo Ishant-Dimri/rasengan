@@ -212,7 +212,7 @@
     let prevSpan = 0;
 
     // Audio Variables
-    let audioCtx, osc, gain;
+    let rasenganSound;
 
     // Motion Trail
     const trail = [];
@@ -287,8 +287,11 @@
       if (canvas.height !== H) canvas.height = H;
       ctx.clearRect(0, 0, W, H);
 
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const lm = results.multiHandLandmarks[0];
+     // Dynamically update MP3 volume based on Rasengan size/alpha
+      if (rasenganSound) {
+        // Ensure volume stays strictly between 0.0 and 1.0 to prevent errors
+        rasenganSound.volume = Math.min(Math.max(rasenganAlpha, 0), 1);
+      }
         const spanFull = Math.max(dist3D(lm[4], lm[20]), dist3D(lm[4], lm[8]));
         prevSpan = lerp(prevSpan, spanFull, 0.35);
 
@@ -348,16 +351,12 @@
       setTimeout(() => startScreen.style.display = 'none', 500);
 
       // 1. Init Audio safely behind interaction
-      audioCtx = new AudioContext();
-      osc = audioCtx.createOscillator();
-      gain = audioCtx.createGain();
-      osc.connect(gain); 
-      gain.connect(audioCtx.destination);
-      osc.type = 'sine'; 
-      osc.frequency.value = 180;
-      gain.gain.value = 0; 
-      osc.start();
-
+// 1. Init Audio safely behind interaction
+      // REPLACE 'your-sound.mp3' WITH your actual file name
+      rasenganSound = new Audio('./rasengan.mp3'); 
+      rasenganSound.loop = true; // Loops the sound infinitely
+      rasenganSound.volume = 0;  // Start quiet
+      rasenganSound.play().catch(err => console.log("Audio play failed:", err));
       // 2. Init Camera & AI
       const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
       hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.6 });
