@@ -351,7 +351,7 @@
 
       // Init Audio safely behind interaction
       // Note: I fixed the typo here. It was 'rasengan.mp3.mp3' before.
-      rasenganSound = new Audio('./rasengan.mp3.mp3'); 
+      rasenganSound = new Audio('./rasengan.mp3'); 
       rasenganSound.loop = true; 
       rasenganSound.volume = 0;  
       rasenganSound.play().catch(err => console.log("Audio play failed:", err));
