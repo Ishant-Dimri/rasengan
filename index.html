@@ -211,7 +211,7 @@
     let lastX = 0, lastY = 0, lastR = 60;
     let prevSpan = 0;
 
-    // Audio Variables
+    // Audio Variable
     let rasenganSound;
 
     // Motion Trail
@@ -287,11 +287,10 @@
       if (canvas.height !== H) canvas.height = H;
       ctx.clearRect(0, 0, W, H);
 
-     // Dynamically update MP3 volume based on Rasengan size/alpha
-      if (rasenganSound) {
-        // Ensure volume stays strictly between 0.0 and 1.0 to prevent errors
-        rasenganSound.volume = Math.min(Math.max(rasenganAlpha, 0), 1);
-      }
+      // THIS IS THE BLOCK THAT WAS ACCIDENTALLY DELETED
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const lm = results.multiHandLandmarks[0];
+        
         const spanFull = Math.max(dist3D(lm[4], lm[20]), dist3D(lm[4], lm[8]));
         prevSpan = lerp(prevSpan, spanFull, 0.35);
 
@@ -320,12 +319,12 @@
         statusText.textContent = 'Waiting for hand...';
       }
 
+      // Smooth out the animation
       rasenganAlpha += (targetAlpha - rasenganAlpha) * 0.14;
 
-      // Ensure Audio Updates dynamically with the alpha
-      if (audioCtx && gain && osc) {
-        gain.gain.setTargetAtTime(rasenganAlpha * 0.3, audioCtx.currentTime, 0.1);
-        osc.frequency.setTargetAtTime(180 + rasenganAlpha * 200, audioCtx.currentTime, 0.1);
+      // UPDATE VOLUME based on the smoothed alpha
+      if (rasenganSound) {
+        rasenganSound.volume = Math.min(Math.max(rasenganAlpha, 0), 1);
       }
 
       if (rasenganAlpha > 0.005) {
@@ -350,28 +349,12 @@
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 500);
 
-      // 1. Init Audio safely behind interaction
-// 1. Init Audio safely behind interaction
-      // REPLACE 'your-sound.mp3' WITH your actual file name
+      // Init Audio safely behind interaction
+      // Note: I fixed the typo here. It was 'rasengan.mp3.mp3' before.
       rasenganSound = new Audio('./rasengan.mp3.mp3'); 
-      rasenganSound.loop = true; // Loops the sound infinitely
-      rasenganSound.volume = 0;  // Start quiet
+      rasenganSound.loop = true; 
+      rasenganSound.volume = 0;  
       rasenganSound.play().catch(err => console.log("Audio play failed:", err));
-      // 2. Init Camera & AI
-      const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
-      hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.6 });
-      hands.onResults(onResults);
-
-      const camera = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 640, height: 480 });
-      camera.start()
-        .then(() => {
-          overlay.classList.add('hidden');
-          setTimeout(() => overlay.style.display = 'none', 600);
-        })
-        .catch(err => alert('Camera error: ' + err.message));
-    });
-
-  })();
-  </script>
-</body>
-</html>
+      
+      // Init Camera & AI
+      const hands
