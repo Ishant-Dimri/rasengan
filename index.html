@@ -204,7 +204,7 @@
 
   <header>
     <h1 id="main-title">🌀 Rasengan Simulator</h1>
-    <p>✋ Hand Open Wide = Rasengan &nbsp;|&nbsp; ✊ Fingers Tight = Chidori</p>
+    <p>✋ Open Claw = Rasengan &nbsp;|&nbsp; ✊ Tight Spear = Chidori</p>
   </header>
 
   <div id="container">
@@ -262,8 +262,9 @@
     }));
 
     // --- MATH HELPERS ---
-    function dist3D(a, b) { 
-      return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z); 
+    // Using strict 2D distance to prevent webcam depth (Z-axis) from ruining calculations
+    function dist2D(a, b) { 
+      return Math.hypot(a.x - b.x, a.y - b.y); 
     }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -385,22 +386,23 @@
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const lm = results.multiHandLandmarks[0];
         
-        // 1. Palm Size
-        const palmSize = dist3D(lm[0], lm[9]);
+        // 1. Palm Size (Base scale of hand)
+        const palmSize = dist2D(lm[0], lm[9]);
 
-        // 2. Spread Width
-        const spreadWidth = dist3D(lm[4], lm[20]);
+        // 2. Spread Width (Index tip to Pinky tip)
+        // This is significantly more accurate for detecting thrusts vs claws
+        const spreadWidth = dist2D(lm[8], lm[20]);
 
-        // 3. Ratio
+        // 3. Ratio Calculation
         const ratio = spreadWidth / palmSize;
         debugRatio.textContent = `Spread Ratio: ${ratio.toFixed(2)}`;
 
-        // Jutsu Switch Logic
-        if (ratio > 1.6 && currentJutsu !== 'rasengan') {
+        // Jutsu Switch Logic (Tuned thresholds for easy switching)
+        if (ratio > 0.9 && currentJutsu !== 'rasengan') {
           currentJutsu = 'rasengan';
           document.body.classList.remove('chidori-mode');
           mainTitle.textContent = '🌀 Rasengan Active';
-        } else if (ratio < 1.2 && currentJutsu !== 'chidori') {
+        } else if (ratio < 0.6 && currentJutsu !== 'chidori') {
           currentJutsu = 'chidori';
           document.body.classList.add('chidori-mode');
           mainTitle.textContent = '⚡ Chidori Active';
@@ -411,7 +413,6 @@
           lastX = lerp(lastX, ((lm[9].x + lm[0].x) / 2) * W, 0.4);
           lastY = lerp(lastY, ((lm[9].y + lm[0].y) / 2) * H, 0.4);
           
-          // Scaling for classic Rasengan looks best slightly smaller
           lastR = lerp(lastR, palmSize * W * 1.5, 0.3);
 
           dot.classList.add('active');
@@ -443,7 +444,7 @@
         if (rasenganSound) rasenganSound.volume = 0;
       }
 
-      // Rendering with Trail support for classic Rasengan
+      // Rendering 
       if (jutsuAlpha > 0.01) {
         if (currentJutsu === 'rasengan') {
           trail.push({ x: lastX, y: lastY, r: lastR, age: 0 });
