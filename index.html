@@ -287,7 +287,6 @@
       if (canvas.height !== H) canvas.height = H;
       ctx.clearRect(0, 0, W, H);
 
-      // THIS IS THE BLOCK THAT WAS ACCIDENTALLY DELETED
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const lm = results.multiHandLandmarks[0];
         
@@ -350,11 +349,26 @@
       setTimeout(() => startScreen.style.display = 'none', 500);
 
       // Init Audio safely behind interaction
-      // Note: I fixed the typo here. It was 'rasengan.mp3.mp3' before.
       rasenganSound = new Audio('./rasengan.mp3'); 
       rasenganSound.loop = true; 
       rasenganSound.volume = 0;  
       rasenganSound.play().catch(err => console.log("Audio play failed:", err));
       
       // Init Camera & AI
-      const hands
+      const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
+      hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.6 });
+      hands.onResults(onResults);
+
+      const camera = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 640, height: 480 });
+      camera.start()
+        .then(() => {
+          overlay.classList.add('hidden');
+          setTimeout(() => overlay.style.display = 'none', 600);
+        })
+        .catch(err => alert('Camera error: ' + err.message));
+    });
+
+  })();
+  </script>
+</body>
+</html>
