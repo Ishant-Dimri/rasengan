@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jutsu Simulator 🌀⚡</title>
+  <title>Ultimate Jutsu Simulator 🌀⚡</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --blue-mid:    #00c8ff;
-      --lightning:   #bfe2ff;
-      --bg:          #04080f;
+      --lightning:   #e0f2ff;
+      --bg:          #020408;
     }
 
     body {
@@ -33,37 +33,41 @@
       color: #cce9ff;
     }
 
+    /* Animated background ambient glow */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(ellipse at 20% 30%, rgba(0, 60, 120, 0.35) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 70%, rgba(0, 30, 80, 0.3) 0%, transparent 55%);
+      background: radial-gradient(circle at 50% 50%, rgba(0, 40, 80, 0.4) 0%, transparent 70%);
       pointer-events: none;
+      transition: background 0.2s ease;
+    }
+    body.chidori-mode::before {
+      background: radial-gradient(circle at 50% 50%, rgba(40, 80, 120, 0.5) 0%, transparent 70%);
     }
 
     header {
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       position: relative;
       z-index: 5;
     }
     
     header h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-size: clamp(2.5rem, 5vw, 4rem);
       letter-spacing: 8px;
       background: linear-gradient(135deg, #ffffff 30%, var(--blue-mid) 70%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 18px rgba(0,200,255,0.7));
+      filter: drop-shadow(0 0 20px rgba(0,200,255,0.8));
       transition: 0.3s;
     }
 
     header p {
-      font-size: 1.1rem;
-      letter-spacing: 2px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 3px;
       color: #99c2ff;
       margin-top: 5px;
     }
@@ -72,15 +76,14 @@
       background: linear-gradient(135deg, #ffffff 30%, var(--lightning) 70%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 18px rgba(200,230,255,0.7));
+      filter: drop-shadow(0 0 25px rgba(200,230,255,0.9));
     }
-    body.chidori-mode header p { color: #d4ebff; }
 
     /* Start Button Overlay */
     #start-screen {
       position: fixed;
       inset: 0;
-      background: rgba(4, 8, 15, 0.95);
+      background: rgba(2, 4, 8, 0.98);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -90,34 +93,37 @@
     }
     
     .btn {
-      padding: 15px 40px;
+      padding: 18px 45px;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.5rem;
-      letter-spacing: 4px;
+      font-size: 1.8rem;
+      letter-spacing: 5px;
       color: #fff;
       background: rgba(0, 0, 0, 0.5);
       border: 2px solid var(--blue-mid);
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+      box-shadow: 0 0 25px rgba(0, 200, 255, 0.4);
       transition: 0.3s;
     }
     .btn:hover {
-      background: rgba(0, 200, 255, 0.2);
-      box-shadow: 0 0 30px rgba(0, 200, 255, 0.6);
+      background: rgba(0, 200, 255, 0.3);
+      box-shadow: 0 0 40px rgba(0, 200, 255, 0.8);
+      transform: scale(1.05);
     }
 
     #container {
       position: relative;
-      width: min(640px, 98vw);
+      width: min(720px, 95vw);
       aspect-ratio: 4 / 3;
-      border-radius: 14px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 0 50px rgba(0,130,255,0.25);
-      transition: 0.3s;
+      box-shadow: 0 0 60px rgba(0,150,255,0.3);
+      transition: 0.2s;
+      border: 1px solid rgba(0, 200, 255, 0.2);
     }
     body.chidori-mode #container {
-      box-shadow: 0 0 50px rgba(180,220,255,0.3);
+      box-shadow: 0 0 70px rgba(200,230,255,0.4);
+      border-color: rgba(200, 230, 255, 0.3);
     }
 
     video, #output_canvas {
@@ -132,7 +138,7 @@
     #loading-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(4, 8, 15, 0.92);
+      background: rgba(2, 4, 8, 0.95);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -142,53 +148,52 @@
       transition: opacity 0.5s;
     }
     .spinner-ring {
-      width: 60px; height: 60px;
+      width: 70px; height: 70px;
       border-radius: 50%;
-      border: 3px solid transparent;
+      border: 4px solid transparent;
       border-top-color: var(--blue-mid);
-      animation: spin 0.9s linear infinite;
+      animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    #jutsu-label {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%) scaleX(-1);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
-      letter-spacing: 10px;
-      color: #fff;
-      text-shadow: 0 0 30px var(--blue-mid);
-      opacity: 0;
-      transition: opacity 0.25s ease;
-      z-index: 10;
-    }
-    body.chidori-mode #jutsu-label {
-      text-shadow: 0 0 30px var(--lightning);
+    #status-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
 
     #status-bar {
-      margin-top: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 0.83rem;
-      letter-spacing: 2px;
-      color: rgba(140, 200, 240, 0.6);
+      gap: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: rgba(140, 200, 240, 0.7);
     }
     #dot {
-      width: 8px; height: 8px;
+      width: 10px; height: 10px;
       border-radius: 50%;
       background: rgba(0,200,255,0.3);
     }
     #dot.active {
       background: var(--blue-mid);
-      box-shadow: 0 0 12px rgba(0, 200, 255, 0.6), 0 0 4px #fff;
+      box-shadow: 0 0 15px rgba(0, 200, 255, 0.8), 0 0 5px #fff;
     }
     body.chidori-mode #dot.active {
       background: var(--lightning);
-      box-shadow: 0 0 12px rgba(200, 230, 255, 0.6), 0 0 4px #fff;
+      box-shadow: 0 0 15px rgba(200, 230, 255, 0.8), 0 0 5px #fff;
+    }
+    
+    #debug-ratio {
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.4);
+      background: rgba(0,0,0,0.5);
+      padding: 4px 10px;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -200,22 +205,24 @@
 
   <header>
     <h1 id="main-title">🌀 Rasengan Simulator</h1>
-    <p>✋ Open Hand = Rasengan &nbsp;|&nbsp; ✊ Closed Fingers = Chidori</p>
+    <p>✋ Hand Open Wide = Rasengan &nbsp;|&nbsp; ✊ Fingers Tight = Chidori</p>
   </header>
 
   <div id="container">
     <div id="loading-overlay">
       <div class="spinner-ring"></div>
-      <span style="font-family: 'Bebas Neue'; letter-spacing: 4px;">Loading Camera...</span>
+      <span style="font-family: 'Bebas Neue'; letter-spacing: 5px; font-size: 1.2rem;">CALIBRATING...</span>
     </div>
-    <div id="jutsu-label">RASENGAN !</div>
     <video id="webcam" autoplay playsinline muted></video>
     <canvas id="output_canvas"></canvas>
   </div>
 
-  <div id="status-bar">
-    <div id="dot"></div>
-    <span id="status-text">Waiting for hand...</span>
+  <div id="status-container">
+    <div id="status-bar">
+      <div id="dot"></div>
+      <span id="status-text">Waiting for hand...</span>
+    </div>
+    <div id="debug-ratio">Spread Ratio: 0.00 (Calibration)</div>
   </div>
 
   <script>
@@ -224,209 +231,216 @@
     const canvas = document.getElementById('output_canvas');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('loading-overlay');
-    const label = document.getElementById('jutsu-label');
     const dot = document.getElementById('dot');
     const statusText = document.getElementById('status-text');
+    const debugRatio = document.getElementById('debug-ratio');
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
     const mainTitle = document.getElementById('main-title');
 
-    let rotAngle = 0;
+    let time = 0; // Universal time for animations
     let jutsuAlpha = 0;
     let targetAlpha = 0;
-    let lastX = 0, lastY = 0, lastR = 60;
+    let lastX = 0, lastY = 0, lastR = 80;
     let currentJutsu = 'rasengan'; 
 
     // Audio Variables
     let rasenganSound, chidoriSound;
 
-    // Motion Trail
-    const trail = [];
-
-    // Particles for Rasengan
-    const PARTICLE_COUNT = 150;
-    const particles = Array.from({length: PARTICLE_COUNT}, () => ({
-      angle: Math.random() * Math.PI * 2,
-      rRatio: 0.12 + Math.random() * 1.0,
-      vRatio: 0.2 + Math.random() * 0.55,
-      speed: (0.025 + Math.random() * 0.065) * (Math.random() > 0.45 ? 1 : -1.3),
-      size: 1.2 + Math.random() * 2.6,
-      baseAlpha: 0.45 + Math.random() * 0.55,
-      isWhite: Math.random() > 0.4,
-      twinkle: Math.random() * Math.PI * 2,
-      twinkleS: 0.04 + Math.random() * 0.06
-    }));
-
-    function dist3D(a, b) { return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2); }
+    // --- MATH HELPERS ---
+    // Uses Math.hypot for clean 3D distance calculation
+    function dist3D(a, b) { 
+      return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z); 
+    }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
-    // Swaps UI Elements automatically
-    function setJutsuMode(mode) {
-      if (currentJutsu === mode) return; 
-      currentJutsu = mode;
-      
-      if (mode === 'chidori') {
-        document.body.classList.add('chidori-mode');
-        mainTitle.textContent = '⚡ Chidori Active';
-        label.textContent = 'CHIDORI !';
-      } else {
-        document.body.classList.remove('chidori-mode');
-        mainTitle.textContent = '🌀 Rasengan Active';
-        label.textContent = 'RASENGAN !';
-      }
-    }
-
+    // --- GRAPHICS: UPGRADED RASENGAN ---
     function drawRasengan(cx, cy, radius, alpha) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
-
-      // Core sphere
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.2);
-      core.addColorStop(0, `rgba(255,255,255,${alpha})`);
-      core.addColorStop(0.4, `rgba(100,220,255,${0.8 * alpha})`);
-      core.addColorStop(1, 'rgba(0,50,150,0)');
+      
+      // 1. Outer Glow Aura
+      ctx.shadowColor = 'rgba(0, 150, 255, 1)';
+      ctx.shadowBlur = radius * 0.8;
+      
+      // 2. Dense Core (White to deep blue)
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      core.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+      core.addColorStop(0.2, `rgba(180, 240, 255, ${0.9 * alpha})`);
+      core.addColorStop(0.6, `rgba(0, 120, 255, ${0.5 * alpha})`);
+      core.addColorStop(1, 'rgba(0, 50, 150, 0)');
+      
       ctx.fillStyle = core;
-      ctx.beginPath(); ctx.arc(cx, cy, radius * 1.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); 
+      ctx.arc(cx, cy, radius * 1.5, 0, Math.PI * 2); 
+      ctx.fill();
 
-      // Rings
-      const ringDefs = [
-        { tilt: 0, a: 0.95, b: 0.15, dir: 1 },
-        { tilt: Math.PI/3, a: 0.88, b: 0.22, dir: -1.2 },
-        { tilt: Math.PI*2/3, a: 0.80, b: 0.30, dir: 1.4 }
+      // 3. High-Speed Spinning Chakra Rings
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 10;
+      
+      // Create 4 rings rotating on different axes at different speeds
+      const rings = [
+        { rx: 1.0, ry: 0.3, angle: time * 0.15, tilt: 0 },
+        { rx: 0.9, ry: 0.4, angle: -time * 0.2, tilt: Math.PI / 3 },
+        { rx: 0.85, ry: 0.25, angle: time * 0.25, tilt: -Math.PI / 4 },
+        { rx: 0.95, ry: 0.35, angle: -time * 0.18, tilt: Math.PI / 2 }
       ];
 
       ctx.translate(cx, cy);
-      ctx.strokeStyle = `rgba(160,235,255,${0.75 * alpha})`;
-      ctx.lineWidth = 2;
-      for (const ring of ringDefs) {
+      for (let r of rings) {
         ctx.save();
-        ctx.rotate(ring.tilt + rotAngle * ring.dir);
-        ctx.beginPath(); ctx.ellipse(0, 0, radius * ring.a, radius * ring.b, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.rotate(r.tilt); // Tilt the 3D plane
+        ctx.rotate(r.angle); // Spin along the plane
+        
+        ctx.strokeStyle = `rgba(150, 230, 255, ${0.8 * alpha})`;
+        ctx.beginPath(); 
+        // Draw ellipse to simulate 3D perspective ring
+        ctx.ellipse(0, 0, radius * r.rx, radius * r.ry, 0, 0, Math.PI * 2); 
+        ctx.stroke();
         ctx.restore();
       }
       ctx.translate(-cx, -cy);
 
-      // Particles
-      for (const p of particles) {
-        p.angle += p.speed;
-        p.twinkle += p.twinkleS;
-        const px = cx + Math.cos(p.angle) * (radius * p.rRatio);
-        const py = cy + Math.sin(p.angle) * (radius * p.rRatio) * p.vRatio;
-        ctx.beginPath(); ctx.arc(px, py, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.isWhite ? `rgba(240,252,255,${p.baseAlpha * alpha})` : `rgba(60,200,255,${p.baseAlpha * alpha})`;
-        ctx.fill();
-      }
-
       ctx.restore();
-      rotAngle += 0.04;
     }
 
+    // --- GRAPHICS: UPGRADED CHIDORI ---
     function drawChidori(cx, cy, radius, alpha) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
 
-      // Intense White/Cyan Core
-      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.9);
-      core.addColorStop(0, `rgba(255,255,255,${alpha})`);
-      core.addColorStop(0.3, `rgba(180,240,255,${0.9 * alpha})`);
-      core.addColorStop(1, 'rgba(0,100,255,0)');
-      ctx.fillStyle = core;
-      ctx.beginPath(); ctx.arc(cx, cy, radius * 0.9, 0, Math.PI * 2); ctx.fill();
+      // 1. Blinding Strobe Core (Flickers heavily)
+      const strobe = 0.7 + Math.random() * 0.3; // Rapid flickering
+      const currentAlpha = alpha * strobe;
 
-      // Jagged Lightning Bolts
-      const numBolts = Math.floor(Math.random() * 6) + 4; // 4 to 9 bolts per frame
-      ctx.lineWidth = 2 + Math.random() * 4;
+      ctx.shadowColor = 'rgba(180, 230, 255, 1)';
+      ctx.shadowBlur = 40;
+
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.8);
+      core.addColorStop(0, `rgba(255, 255, 255, ${currentAlpha})`);
+      core.addColorStop(0.4, `rgba(100, 200, 255, ${0.8 * currentAlpha})`);
+      core.addColorStop(1, 'rgba(0, 50, 150, 0)');
+      
+      ctx.fillStyle = core;
+      ctx.beginPath(); 
+      ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2); 
+      ctx.fill();
+
+      // 2. Fractal Lightning Bolts
+      const numBolts = Math.floor(Math.random() * 5) + 6; // 6 to 10 main bolts
       ctx.lineCap = 'round';
       ctx.lineJoin = 'miter';
 
       for (let i = 0; i < numBolts; i++) {
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        let angle = Math.random() * Math.PI * 2;
+        
+        let angle = Math.random() * Math.PI * 2; // Random direction
         let currentX = cx;
         let currentY = cy;
-        let boltLength = radius * (1.2 + Math.random() * 1.5); 
-        let segments = 4 + Math.floor(Math.random() * 5);
+        let boltLength = radius * (1.5 + Math.random() * 2.5); // How far it shoots out
+        let segments = 5 + Math.floor(Math.random() * 6); // Jaggedness
         let segmentLength = boltLength / segments;
 
+        ctx.lineWidth = 2 + Math.random() * 4;
+
         for (let j = 0; j < segments; j++) {
-          // Add erratic zig-zag angles
-          let offsetAngle = angle + (Math.random() - 0.5) * 1.8;
+          // Sharp, chaotic zig-zag angles
+          let offsetAngle = angle + (Math.random() - 0.5) * 2.0; 
           currentX += Math.cos(offsetAngle) * segmentLength;
           currentY += Math.sin(offsetAngle) * segmentLength;
           ctx.lineTo(currentX, currentY);
+
+          // Small chance to draw a tiny "branch" lightning off the main bolt
+          if (Math.random() > 0.7) {
+            let bx = currentX + Math.cos(offsetAngle + 1) * (segmentLength * 0.5);
+            let by = currentY + Math.sin(offsetAngle + 1) * (segmentLength * 0.5);
+            ctx.moveTo(currentX, currentY);
+            ctx.lineTo(bx, by);
+            ctx.moveTo(currentX, currentY); // return to main path
+          }
         }
         
-        ctx.strokeStyle = Math.random() > 0.4 ? `rgba(255,255,255,${alpha})` : `rgba(150,220,255,${alpha})`;
-        ctx.shadowColor = 'rgba(100,200,255,1)';
-        ctx.shadowBlur = 15;
+        ctx.strokeStyle = Math.random() > 0.5 ? `rgba(255,255,255,${alpha})` : `rgba(150,220,255,${alpha})`;
         ctx.stroke();
       }
 
       ctx.restore();
     }
 
+    // --- AI HAND DETECTION LOGIC ---
     function onResults(results) {
-      const W = video.videoWidth || 640;
-      const H = video.videoHeight || 480;
-      if (canvas.width !== W) canvas.width = W;
-      if (canvas.height !== H) canvas.height = H;
+      time++; // Increment animation clock
+      
+      const W = canvas.width;
+      const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const lm = results.multiHandLandmarks[0];
         
-        // 1. Measure Palm Size (Wrist to Knuckle) for stable scaling
+        // --- NEW DISTANCE MEASUREMENT ---
+        // 1. Palm Size (Wrist to Middle Finger Knuckle) - Used as a baseline scale
         const palmSize = dist3D(lm[0], lm[9]);
 
-        // 2. Measure Finger Spread (Index Tip to Pinky Tip)
-        const spread = dist3D(lm[8], lm[20]);
+        // 2. Spread Width (Thumb tip to Pinky tip) - Measures how "open" the hand is
+        const spreadWidth = dist3D(lm[4], lm[20]);
 
-        // 3. Ratio determines hand shape (works far away or up close)
-        const spreadRatio = spread / palmSize;
+        // 3. The Magic Ratio: Width divided by Palm Size.
+        // This math works no matter how close or far you are from the camera!
+        const ratio = spreadWidth / palmSize;
+        
+        // Update debug text so the user can see what's happening
+        debugRatio.textContent = `Spread Ratio: ${ratio.toFixed(2)}`;
 
-        // Auto-detect! If fingers are close, Chidori. If spread wide, Rasengan.
-        // We use a small gap (1.1 to 1.3) so it doesn't flicker wildly in the middle.
-        if (spreadRatio < 1.1) {
-          setJutsuMode('chidori');
-        } else if (spreadRatio > 1.3) {
-          setJutsuMode('rasengan');
+        // --- JUTSU SWITCHING LOGIC ---
+        // If ratio is > 1.6, fingers are spread wide (Holding Rasengan)
+        // If ratio is < 1.2, fingers are squeezed together (Chidori Thrust)
+        // (Between 1.2 and 1.6, we do nothing to prevent it flickering back and forth rapidly)
+        if (ratio > 1.6 && currentJutsu !== 'rasengan') {
+          currentJutsu = 'rasengan';
+          document.body.classList.remove('chidori-mode');
+          mainTitle.textContent = '🌀 Rasengan Active';
+        } else if (ratio < 1.2 && currentJutsu !== 'chidori') {
+          currentJutsu = 'chidori';
+          document.body.classList.add('chidori-mode');
+          mainTitle.textContent = '⚡ Chidori Active';
         }
 
-        // Activate Jutsu if hand is clearly visible (palmSize > 0.05)
-        if (palmSize > 0.05) {
+        // --- DRAWING LOGIC ---
+        // Only show if hand is relatively visible on screen
+        if (palmSize > 0.04) {
           targetAlpha = 1;
           
-          // Position jutsu in center of hand
-          lastX = lerp(lastX, ((lm[9].x + lm[0].x) / 2) * W, 0.35);
-          lastY = lerp(lastY, ((lm[9].y + lm[0].y) / 2) * H, 0.35);
+          // Track the center of the palm smoothly
+          lastX = lerp(lastX, ((lm[9].x + lm[0].x) / 2) * W, 0.4);
+          lastY = lerp(lastY, ((lm[9].y + lm[0].y) / 2) * H, 0.4);
           
-          // Scale visually based on hand distance
-          lastR = lerp(lastR, palmSize * W * 2.2, 0.3);
+          // Scale visually based on hand distance (closer = bigger)
+          lastR = lerp(lastR, palmSize * W * 1.8, 0.3);
 
-          label.style.opacity = targetAlpha.toFixed(2);
           dot.classList.add('active');
           statusText.classList.add('active');
-          statusText.textContent = currentJutsu === 'rasengan' ? 'RASENGAN DETECTED ⚡' : 'CHIDORI DETECTED ⚡';
+          statusText.textContent = currentJutsu === 'rasengan' ? 'RASENGAN 🌀' : 'CHIDORI ⚡';
         } else {
           targetAlpha = 0;
-          label.style.opacity = '0';
           dot.classList.remove('active');
           statusText.classList.remove('active');
           statusText.textContent = 'Hand too far away ✋';
         }
       } else {
         targetAlpha = 0;
-        label.style.opacity = '0';
         dot.classList.remove('active');
         statusText.classList.remove('active');
         statusText.textContent = 'Waiting for hand...';
+        debugRatio.textContent = `Spread Ratio: --`;
       }
 
-      // Smooth out the animation
-      jutsuAlpha += (targetAlpha - jutsuAlpha) * 0.14;
+      // Smooth fade in/out
+      jutsuAlpha += (targetAlpha - jutsuAlpha) * 0.15;
 
-      // UPDATE VOLUME based on active jutsu
+      // --- AUDIO CONTROL ---
       const activeVolume = Math.min(Math.max(jutsuAlpha, 0), 1);
       if (currentJutsu === 'rasengan' && rasenganSound) {
         rasenganSound.volume = activeVolume;
@@ -436,53 +450,57 @@
         if (rasenganSound) rasenganSound.volume = 0;
       }
 
-      if (jutsuAlpha > 0.005) {
+      // --- RENDER ---
+      if (jutsuAlpha > 0.01) {
         if (currentJutsu === 'rasengan') {
-          // Draw Motion Trail Behind for Rasengan
-          trail.push({ x: lastX, y: lastY, r: lastR, age: 0 });
-          if (trail.length > 8) trail.shift();
-          trail.forEach((t) => {
-            t.age++;
-            const trailAlpha = jutsuAlpha * (1 - t.age / 8) * 0.3;
-            drawRasengan(t.x, t.y, t.r * 0.8, trailAlpha);
-          });
-          // Draw Main Rasengan
           drawRasengan(lastX, lastY, lastR, jutsuAlpha);
         } else {
-          // Chidori doesn't need a smooth trail, it's chaotic
-          trail.length = 0;
           drawChidori(lastX, lastY, lastR, jutsuAlpha);
         }
-      } else {
-        trail.length = 0; // Clear trail when off
       }
     }
 
-    // Main Init
+    // --- MAIN INIT ---
     startBtn.addEventListener('click', () => {
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 500);
+
+      // Setup Canvas Native Size to prevent stretching
+      const W = 640; 
+      const H = 480;
+      canvas.width = W; 
+      canvas.height = H;
 
       // Load both audio files
       rasenganSound = new Audio('./rasengan.mp3'); 
       rasenganSound.loop = true; 
       rasenganSound.volume = 0;  
-      rasenganSound.play().catch(err => console.log("Rasengan audio play failed:", err));
+      rasenganSound.play().catch(e => console.log("Audio prep failed"));
 
       chidoriSound = new Audio('./chidori.mp3'); 
       chidoriSound.loop = true; 
       chidoriSound.volume = 0;  
-      chidoriSound.play().catch(err => console.log("Chidori audio play failed:", err));
+      chidoriSound.play().catch(e => console.log("Audio prep failed"));
       
-      // Init Camera & AI
+      // Init AI
       const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
-      hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.6 });
+      hands.setOptions({ 
+        maxNumHands: 1, 
+        modelComplexity: 1, 
+        minDetectionConfidence: 0.65, 
+        minTrackingConfidence: 0.65 
+      });
       hands.onResults(onResults);
 
-      const camera = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 640, height: 480 });
+      const camera = new Camera(video, { 
+        onFrame: async () => { await hands.send({ image: video }); }, 
+        width: W, 
+        height: H 
+      });
+      
       camera.start()
         .then(() => {
-          overlay.classList.add('hidden');
+          overlay.style.opacity = '0';
           setTimeout(() => overlay.style.display = 'none', 600);
         })
         .catch(err => alert('Camera error: ' + err.message));
