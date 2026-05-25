@@ -33,7 +33,6 @@
       color: #cce9ff;
     }
 
-    /* Animated background ambient glow */
     body::before {
       content: '';
       position: fixed;
@@ -238,7 +237,6 @@
     const startBtn = document.getElementById('start-btn');
     const mainTitle = document.getElementById('main-title');
 
-    let time = 0; // Universal time for animations
     let jutsuAlpha = 0;
     let targetAlpha = 0;
     let lastX = 0, lastY = 0, lastR = 80;
@@ -247,18 +245,9 @@
     // Audio Variables
     let rasenganSound, chidoriSound;
 
-    // --- MATH HELPERS ---
-    // Uses Math.hypot for clean 3D distance calculation
-    function dist3D(a, b) { 
-      return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z); 
-    }
-    function lerp(a, b, t) { return a + (b - a) * t; }
-
-    // --- GRAPHICS: UPGRADED RASENGAN ---
- // Motion Trail
+    // --- CLASSIC RASENGAN VARIABLES ---
+    let rotAngle = 0;
     const trail = [];
-
-    // Particles for Rasengan
     const PARTICLE_COUNT = 150;
     const particles = Array.from({length: PARTICLE_COUNT}, () => ({
       angle: Math.random() * Math.PI * 2,
@@ -272,10 +261,15 @@
       twinkleS: 0.04 + Math.random() * 0.06
     }));
 
-    function dist3D(a, b) { return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2); }
+    // --- MATH HELPERS ---
+    function dist3D(a, b) { 
+      return Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z); 
+    }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
+    // --- CLASSIC RASENGAN GRAPHICS ---
     function drawRasengan(cx, cy, radius, alpha) {
+      if (alpha < 0.005) return;
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
 
@@ -319,13 +313,14 @@
       ctx.restore();
       rotAngle += 0.04;
     }
-    // --- GRAPHICS: UPGRADED CHIDORI ---
+
+    // --- UPGRADED CHIDORI GRAPHICS ---
     function drawChidori(cx, cy, radius, alpha) {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
 
-      // 1. Blinding Strobe Core (Flickers heavily)
-      const strobe = 0.7 + Math.random() * 0.3; // Rapid flickering
+      // Blinding Strobe Core
+      const strobe = 0.7 + Math.random() * 0.3; 
       const currentAlpha = alpha * strobe;
 
       ctx.shadowColor = 'rgba(180, 230, 255, 1)';
@@ -341,8 +336,8 @@
       ctx.arc(cx, cy, radius * 0.8, 0, Math.PI * 2); 
       ctx.fill();
 
-      // 2. Fractal Lightning Bolts
-      const numBolts = Math.floor(Math.random() * 5) + 6; // 6 to 10 main bolts
+      // Fractal Lightning Bolts
+      const numBolts = Math.floor(Math.random() * 5) + 6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'miter';
 
@@ -350,29 +345,27 @@
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         
-        let angle = Math.random() * Math.PI * 2; // Random direction
+        let angle = Math.random() * Math.PI * 2; 
         let currentX = cx;
         let currentY = cy;
-        let boltLength = radius * (1.5 + Math.random() * 2.5); // How far it shoots out
-        let segments = 5 + Math.floor(Math.random() * 6); // Jaggedness
+        let boltLength = radius * (1.5 + Math.random() * 2.5);
+        let segments = 5 + Math.floor(Math.random() * 6);
         let segmentLength = boltLength / segments;
 
         ctx.lineWidth = 2 + Math.random() * 4;
 
         for (let j = 0; j < segments; j++) {
-          // Sharp, chaotic zig-zag angles
           let offsetAngle = angle + (Math.random() - 0.5) * 2.0; 
           currentX += Math.cos(offsetAngle) * segmentLength;
           currentY += Math.sin(offsetAngle) * segmentLength;
           ctx.lineTo(currentX, currentY);
 
-          // Small chance to draw a tiny "branch" lightning off the main bolt
           if (Math.random() > 0.7) {
             let bx = currentX + Math.cos(offsetAngle + 1) * (segmentLength * 0.5);
             let by = currentY + Math.sin(offsetAngle + 1) * (segmentLength * 0.5);
             ctx.moveTo(currentX, currentY);
             ctx.lineTo(bx, by);
-            ctx.moveTo(currentX, currentY); // return to main path
+            ctx.moveTo(currentX, currentY); 
           }
         }
         
@@ -385,8 +378,6 @@
 
     // --- AI HAND DETECTION LOGIC ---
     function onResults(results) {
-      time++; // Increment animation clock
-      
       const W = canvas.width;
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
@@ -394,24 +385,17 @@
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const lm = results.multiHandLandmarks[0];
         
-        // --- NEW DISTANCE MEASUREMENT ---
-        // 1. Palm Size (Wrist to Middle Finger Knuckle) - Used as a baseline scale
+        // 1. Palm Size
         const palmSize = dist3D(lm[0], lm[9]);
 
-        // 2. Spread Width (Thumb tip to Pinky tip) - Measures how "open" the hand is
+        // 2. Spread Width
         const spreadWidth = dist3D(lm[4], lm[20]);
 
-        // 3. The Magic Ratio: Width divided by Palm Size.
-        // This math works no matter how close or far you are from the camera!
+        // 3. Ratio
         const ratio = spreadWidth / palmSize;
-        
-        // Update debug text so the user can see what's happening
         debugRatio.textContent = `Spread Ratio: ${ratio.toFixed(2)}`;
 
-        // --- JUTSU SWITCHING LOGIC ---
-        // If ratio is > 1.6, fingers are spread wide (Holding Rasengan)
-        // If ratio is < 1.2, fingers are squeezed together (Chidori Thrust)
-        // (Between 1.2 and 1.6, we do nothing to prevent it flickering back and forth rapidly)
+        // Jutsu Switch Logic
         if (ratio > 1.6 && currentJutsu !== 'rasengan') {
           currentJutsu = 'rasengan';
           document.body.classList.remove('chidori-mode');
@@ -422,17 +406,13 @@
           mainTitle.textContent = '⚡ Chidori Active';
         }
 
-        // --- DRAWING LOGIC ---
-        // Only show if hand is relatively visible on screen
         if (palmSize > 0.04) {
           targetAlpha = 1;
-          
-          // Track the center of the palm smoothly
           lastX = lerp(lastX, ((lm[9].x + lm[0].x) / 2) * W, 0.4);
           lastY = lerp(lastY, ((lm[9].y + lm[0].y) / 2) * H, 0.4);
           
-          // Scale visually based on hand distance (closer = bigger)
-          lastR = lerp(lastR, palmSize * W * 1.8, 0.3);
+          // Scaling for classic Rasengan looks best slightly smaller
+          lastR = lerp(lastR, palmSize * W * 1.5, 0.3);
 
           dot.classList.add('active');
           statusText.classList.add('active');
@@ -451,10 +431,9 @@
         debugRatio.textContent = `Spread Ratio: --`;
       }
 
-      // Smooth fade in/out
       jutsuAlpha += (targetAlpha - jutsuAlpha) * 0.15;
 
-      // --- AUDIO CONTROL ---
+      // Audio Control
       const activeVolume = Math.min(Math.max(jutsuAlpha, 0), 1);
       if (currentJutsu === 'rasengan' && rasenganSound) {
         rasenganSound.volume = activeVolume;
@@ -464,13 +443,23 @@
         if (rasenganSound) rasenganSound.volume = 0;
       }
 
-      // --- RENDER ---
+      // Rendering with Trail support for classic Rasengan
       if (jutsuAlpha > 0.01) {
         if (currentJutsu === 'rasengan') {
+          trail.push({ x: lastX, y: lastY, r: lastR, age: 0 });
+          if (trail.length > 8) trail.shift();
+          trail.forEach((t) => {
+            t.age++;
+            const trailAlpha = jutsuAlpha * (1 - t.age / 8) * 0.3;
+            drawRasengan(t.x, t.y, t.r * 0.8, trailAlpha);
+          });
           drawRasengan(lastX, lastY, lastR, jutsuAlpha);
         } else {
+          trail.length = 0; // Clear trail when Chidori is active
           drawChidori(lastX, lastY, lastR, jutsuAlpha);
         }
+      } else {
+        trail.length = 0;
       }
     }
 
@@ -479,13 +468,11 @@
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 500);
 
-      // Setup Canvas Native Size to prevent stretching
       const W = 640; 
       const H = 480;
       canvas.width = W; 
       canvas.height = H;
 
-      // Load both audio files
       rasenganSound = new Audio('./rasengan.mp3'); 
       rasenganSound.loop = true; 
       rasenganSound.volume = 0;  
@@ -496,7 +483,6 @@
       chidoriSound.volume = 0;  
       chidoriSound.play().catch(e => console.log("Audio prep failed"));
       
-      // Init AI
       const hands = new Hands({ locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${file}` });
       hands.setOptions({ 
         maxNumHands: 1, 
